@@ -1,0 +1,1 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=ca.pjer.iam.config.auto.AutoConfig
