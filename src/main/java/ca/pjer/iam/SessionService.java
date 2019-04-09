@@ -5,7 +5,7 @@ import java.util.Map;
 
 public interface SessionService {
 
-    Map<String, Object> create(Map<String, Object> identity);
+    Map<String, Object> create(Map<String, Object> identity, String state);
 
     Principal load(Map<String, Object> session);
 

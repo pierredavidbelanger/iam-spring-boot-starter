@@ -30,11 +30,12 @@ public class DefaultOAuthClient implements OAuthClient {
         restTemplate = restTemplateBuilder.build();
     }
 
-    public URI getAuthorizeUri(URI redirectUri) {
+    public URI getAuthorizeUri(URI redirectUri, String state) {
         return UriComponentsBuilder.fromUriString(authorizeUri)
                 .queryParam("response_type", "code")
                 .queryParam("client_id", clientId)
                 .queryParam("redirect_uri", redirectUri.toString())
+                .queryParam("state", state)
                 .build().toUri();
     }
 

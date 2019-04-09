@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServletServerHttpRequest;
+import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.FilterChain;
@@ -17,6 +18,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -61,7 +63,11 @@ public class AuthFilter extends HttpFilter {
 
             if (path.equals(loginPath)) {
                 URI redirectUri = buildPublicUri(req, loginCallbackPath);
-                URI location = identityOAuthClient.getAuthorizeUri(redirectUri);
+                String state = req.getParameter("state");
+                if (StringUtils.isEmpty(state)) {
+                    state = UUID.randomUUID().toString();
+                }
+                URI location = identityOAuthClient.getAuthorizeUri(redirectUri, state);
                 redirect(res, HttpStatus.TEMPORARY_REDIRECT, location);
                 return;
             }
@@ -69,9 +75,10 @@ public class AuthFilter extends HttpFilter {
             if (path.equals(loginCallbackPath)) {
                 URI redirectUri = buildPublicUri(req, loginCallbackPath);
                 String code = req.getParameter("code");
+                String state = req.getParameter("state");
                 String idToken = (String) identityOAuthClient.getTokens(redirectUri, code).get("id_token");
                 Map<String, Object> identity = identityTokenService.parse(idToken);
-                Map<String, Object> session = sessionService.create(identity);
+                Map<String, Object> session = sessionService.create(identity, state);
                 String sessionToken = sessionTokenService.create(session);
                 setCookie(res, sessionName, sessionToken, secure, (int) sessionDuration.get(ChronoUnit.SECONDS));
                 redirect(res, HttpStatus.TEMPORARY_REDIRECT, buildPublicUri(req, "/"));

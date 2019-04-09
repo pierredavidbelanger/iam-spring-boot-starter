@@ -8,7 +8,7 @@ import java.util.UUID;
 public class DefaultSessionService implements SessionService {
 
     @Override
-    public Map<String, Object> create(Map<String, Object> identity) {
+    public Map<String, Object> create(Map<String, Object> identity, String state) {
         Map<String, Object> session = new HashMap<>();
         session.put("jti", UUID.randomUUID().toString());
         session.put("sub", identity.get("sub"));
