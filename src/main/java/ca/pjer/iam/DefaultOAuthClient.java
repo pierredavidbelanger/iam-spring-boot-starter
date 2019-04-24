@@ -20,6 +20,7 @@ public class DefaultOAuthClient implements OAuthClient {
     private final String clientSecret;
     private final String authorizeUri;
     private final String tokenUri;
+    private final String logoutUri;
     private final RestTemplate restTemplate;
 
     public DefaultOAuthClient(OAuthClientProperties properties, RestTemplateBuilder restTemplateBuilder) {
@@ -27,6 +28,7 @@ public class DefaultOAuthClient implements OAuthClient {
         this.clientSecret = properties.getClientSecret();
         this.authorizeUri = properties.getAuthorizeUri();
         this.tokenUri = properties.getTokenUri();
+        this.logoutUri = properties.getLogoutUri();
         restTemplate = restTemplateBuilder.build();
     }
 
@@ -36,6 +38,14 @@ public class DefaultOAuthClient implements OAuthClient {
                 .queryParam("client_id", clientId)
                 .queryParam("redirect_uri", redirectUri.toString())
                 .queryParam("state", state)
+                .build().toUri();
+    }
+
+    @Override
+    public URI getLogoutUri(URI redirectUri) {
+        return UriComponentsBuilder.fromUriString(logoutUri)
+                .queryParam("client_id", clientId)
+                .queryParam("logout_uri", redirectUri.toString())
                 .build().toUri();
     }
 

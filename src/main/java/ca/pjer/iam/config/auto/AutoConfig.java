@@ -65,7 +65,8 @@ public class AutoConfig {
         bean.setFilter(authFilter);
         bean.addUrlPatterns(properties.getFilter().getLoginPath(),
                 properties.getFilter().getLoginCallbackPath(),
-                properties.getFilter().getLogoutPath());
+                properties.getFilter().getLogoutPath(),
+                properties.getFilter().getLogoutCallbackPath());
         properties.getFilter().getUrlPatterns().forEach(bean::addUrlPatterns);
         return bean;
     }

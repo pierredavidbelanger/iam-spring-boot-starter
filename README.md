@@ -12,7 +12,7 @@ Add one dependency
 <dependency>
     <groupId>ca.pjer</groupId>
     <artifactId>iam-spring-boot-starter</artifactId>
-    <version>1.0.0</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 
@@ -31,6 +31,7 @@ iam.identity-client.client-id=ad398u21ijw3s9w3939
 iam.identity-client.client-secret=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 iam.identity-client.authorize-uri=https://mydomain.auth.us-east-1.amazoncognito.com/oauth2/authorize
 iam.identity-client.token-uri=https://mydomain.auth.us-east-1.amazoncognito.com/oauth2/token
+iam.identity-client.logout-uri=https://mydomain.auth.us-east-1.amazoncognito.com/logout
 iam.identity-token.issuer=https://cognito-idp.us-east-1.amazonaws.com/us-east-1_Example
 iam.identity-token.audience=ad398u21ijw3s9w3939
 iam.identity-token.jkws-uri=https://cognito-idp.us-east-1.amazonaws.com/us-east-1_Example/.well-known/jwks.json

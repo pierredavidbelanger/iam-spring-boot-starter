@@ -28,6 +28,7 @@ public class AuthFilter extends HttpFilter {
     private final String loginPath;
     private final String loginCallbackPath;
     private final String logoutPath;
+    private final String logoutCallbackPath;
     private final String sessionName;
     private final Duration sessionDuration;
 
@@ -41,6 +42,7 @@ public class AuthFilter extends HttpFilter {
         loginPath = filterProperties.getLoginPath();
         loginCallbackPath = filterProperties.getLoginCallbackPath();
         logoutPath = filterProperties.getLogoutPath();
+        logoutCallbackPath = filterProperties.getLogoutCallbackPath();
         sessionName = filterProperties.getSessionName();
         sessionDuration = filterProperties.getSessionDuration();
         this.identityOAuthClient = identityOAuthClient;
@@ -106,6 +108,13 @@ public class AuthFilter extends HttpFilter {
             }
 
             if (path.equals(logoutPath)) {
+                URI redirectUri = buildPublicUri(req, logoutCallbackPath);
+                URI location = identityOAuthClient.getLogoutUri(redirectUri);
+                redirect(res, HttpStatus.TEMPORARY_REDIRECT, location);
+                return;
+            }
+
+            if (path.equals(logoutCallbackPath)) {
                 try {
                     Map<String, Object> session = sessionTokenService.parse(sessionToken);
                     sessionService.remove(session);

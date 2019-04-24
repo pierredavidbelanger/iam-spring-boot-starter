@@ -7,6 +7,8 @@ public interface OAuthClient {
 
     URI getAuthorizeUri(URI redirectUri, String state);
 
+    URI getLogoutUri(URI logoutUri);
+
     Map<String, Object> getTokens(URI redirectUri, String code);
 
 }
