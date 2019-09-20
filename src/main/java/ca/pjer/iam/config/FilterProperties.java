@@ -15,5 +15,6 @@ public class FilterProperties {
     private String logoutCallbackPath = "/auth/logout/callback";
     private String sessionName = "session_token";
     private Duration sessionDuration = Duration.parse("P90D");
+    private boolean sessionTimeout = false;
     private final List<String> urlPatterns = new ArrayList<>();
 }
