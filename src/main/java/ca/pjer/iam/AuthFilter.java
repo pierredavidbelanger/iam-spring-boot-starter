@@ -31,6 +31,7 @@ public class AuthFilter extends HttpFilter {
     private final String logoutCallbackPath;
     private final String sessionName;
     private final Duration sessionDuration;
+    private final boolean sessionTimeout;
 
     private final OAuthClient identityOAuthClient;
     private final TokenService identityTokenService;
@@ -45,6 +46,7 @@ public class AuthFilter extends HttpFilter {
         logoutCallbackPath = filterProperties.getLogoutCallbackPath();
         sessionName = filterProperties.getSessionName();
         sessionDuration = filterProperties.getSessionDuration();
+        sessionTimeout = filterProperties.isSessionTimeout();
         this.identityOAuthClient = identityOAuthClient;
         this.identityTokenService = identityTokenService;
         this.sessionService = sessionService;
@@ -80,7 +82,7 @@ public class AuthFilter extends HttpFilter {
                 String state = req.getParameter("state");
                 String idToken = (String) identityOAuthClient.getTokens(redirectUri, code).get("id_token");
                 Map<String, Object> identity = identityTokenService.parse(idToken);
-                Map<String, Object> session = sessionService.create(identity, state);
+                Map<String, Object> session = sessionService.create(identity, state, req, res);
                 String sessionToken = sessionTokenService.create(session);
                 setCookie(res, sessionName, sessionToken, secure, (int) sessionDuration.get(ChronoUnit.SECONDS));
                 redirect(res, HttpStatus.TEMPORARY_REDIRECT, buildPublicUri(req, "/"));
@@ -117,7 +119,7 @@ public class AuthFilter extends HttpFilter {
             if (path.equals(logoutCallbackPath)) {
                 try {
                     Map<String, Object> session = sessionTokenService.parse(sessionToken);
-                    sessionService.remove(session);
+                    sessionService.remove(session, req, res);
                 } catch (Exception e) {
                     // ignore
                 }
@@ -127,7 +129,10 @@ public class AuthFilter extends HttpFilter {
             }
 
             Map<String, Object> session = sessionTokenService.parse(sessionToken);
-            Principal principal = sessionService.load(session);
+            Principal principal = sessionService.load(session, req, res);
+            if (sessionTimeout) { // refresh cookie expiration (session duration acts as a session timeout)
+                setCookie(res, sessionName, sessionToken, secure, (int) sessionDuration.get(ChronoUnit.SECONDS));
+            }
             req = new HttpServletRequestWrapperImpl(req, principal);
 
         } catch (Exception e) {
