@@ -25,6 +25,7 @@ import java.util.stream.Stream;
 public class AuthFilter extends HttpFilter {
 
     private final boolean secure;
+    private final boolean autoLoginRedirect;
     private final String loginPath;
     private final String loginCallbackPath;
     private final String logoutPath;
@@ -42,6 +43,7 @@ public class AuthFilter extends HttpFilter {
         secure = filterProperties.isSecure();
         loginPath = filterProperties.getLoginPath();
         loginCallbackPath = filterProperties.getLoginCallbackPath();
+        autoLoginRedirect = filterProperties.isAutoLoginRedirect();
         logoutPath = filterProperties.getLogoutPath();
         logoutCallbackPath = filterProperties.getLogoutCallbackPath();
         sessionName = filterProperties.getSessionName();
@@ -115,7 +117,10 @@ public class AuthFilter extends HttpFilter {
                 sessionToken = req.getParameter(sessionName);
             }
             if (Strings.isBlank(sessionToken)) {
-                res.setStatus(HttpStatus.UNAUTHORIZED.value());
+                if (autoLoginRedirect)
+                    redirect(res, HttpStatus.TEMPORARY_REDIRECT, buildPublicUri(req, loginPath));
+                else
+                    res.setStatus(HttpStatus.UNAUTHORIZED.value());
                 return;
             }
 
