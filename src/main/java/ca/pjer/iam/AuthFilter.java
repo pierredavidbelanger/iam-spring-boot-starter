@@ -83,7 +83,7 @@ public class AuthFilter extends HttpFilter {
                 Map<String, Object> tokens = identityOAuthClient.getTokens(redirectUri, code);
                 Map<String, Object> identity = null;
                 String idToken = (String) tokens.get("id_token");
-                if (!Strings.isBlank(code)) {
+                if (!Strings.isBlank(idToken)) {
                     identity = identityTokenService.parse(idToken);
                 }
                 String accessToken = (String) tokens.get("access_token");
