@@ -2,10 +2,7 @@ package ca.pjer.iam;
 
 import ca.pjer.iam.config.OAuthClientProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -16,26 +13,18 @@ import java.util.Map;
 
 public class DefaultOAuthClient implements OAuthClient {
 
-    private final String clientId;
-    private final String clientSecret;
-    private final String authorizeUri;
-    private final String tokenUri;
-    private final String logoutUri;
+    private OAuthClientProperties properties;
     private final RestTemplate restTemplate;
 
     public DefaultOAuthClient(OAuthClientProperties properties, RestTemplateBuilder restTemplateBuilder) {
-        this.clientId = properties.getClientId();
-        this.clientSecret = properties.getClientSecret();
-        this.authorizeUri = properties.getAuthorizeUri();
-        this.tokenUri = properties.getTokenUri();
-        this.logoutUri = properties.getLogoutUri();
+        this.properties = properties;
         restTemplate = restTemplateBuilder.build();
     }
 
     public URI getAuthorizeUri(URI redirectUri, String state) {
-        return UriComponentsBuilder.fromUriString(authorizeUri)
+        return UriComponentsBuilder.fromUriString(properties.getAuthorizeUri())
                 .queryParam("response_type", "code")
-                .queryParam("client_id", clientId)
+                .queryParam("client_id", properties.getClientId())
                 .queryParam("redirect_uri", redirectUri.toString())
                 .queryParam("state", state)
                 .build().toUri();
@@ -43,8 +32,8 @@ public class DefaultOAuthClient implements OAuthClient {
 
     @Override
     public URI getLogoutUri(URI redirectUri) {
-        return UriComponentsBuilder.fromUriString(logoutUri)
-                .queryParam("client_id", clientId)
+        return UriComponentsBuilder.fromUriString(properties.getLogoutUri())
+                .queryParam("client_id", properties.getClientId())
                 .queryParam("logout_uri", redirectUri.toString())
                 .build().toUri();
     }
@@ -56,9 +45,21 @@ public class DefaultOAuthClient implements OAuthClient {
         body.set("redirect_uri", redirectUri.toString());
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.setBasicAuth(clientId, clientSecret);
+        headers.setBasicAuth(properties.getClientId(), properties.getClientSecret());
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(body, headers);
-        ResponseEntity<Map> responseEntity = restTemplate.postForEntity(URI.create(tokenUri), requestEntity, Map.class);
+        //noinspection rawtypes
+        ResponseEntity<Map> responseEntity = restTemplate.postForEntity(URI.create(properties.getTokenUri()), requestEntity, Map.class);
+        //noinspection unchecked
+        return responseEntity.getBody();
+    }
+
+    @Override
+    public Map<String, Object> getUserInfo(String accessToken) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(accessToken);
+        HttpEntity<String> requestEntity = new HttpEntity<>(headers);
+        //noinspection rawtypes
+        ResponseEntity<Map> responseEntity = restTemplate.exchange(URI.create(properties.getUserInfoUri()), HttpMethod.GET, requestEntity, Map.class);
         //noinspection unchecked
         return responseEntity.getBody();
     }

@@ -11,4 +11,6 @@ public interface OAuthClient {
 
     Map<String, Object> getTokens(URI redirectUri, String code);
 
+    Map<String, Object> getUserInfo(String accessToken);
+
 }

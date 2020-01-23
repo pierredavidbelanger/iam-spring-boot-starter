@@ -80,13 +80,23 @@ public class AuthFilter extends HttpFilter {
                 URI redirectUri = buildPublicUri(req, loginCallbackPath);
                 String code = req.getParameter("code");
                 String state = req.getParameter("state");
-                String idToken = (String) identityOAuthClient.getTokens(redirectUri, code).get("id_token");
-                Map<String, Object> identity = identityTokenService.parse(idToken);
-                Map<String, Object> session = sessionService.create(identity, state, req, res);
-                String sessionToken = sessionTokenService.create(session);
-                setCookie(res, sessionName, sessionToken, secure, (int) sessionDuration.get(ChronoUnit.SECONDS));
-                redirect(res, HttpStatus.TEMPORARY_REDIRECT, buildPublicUri(req, "/"));
-                return;
+                Map<String, Object> tokens = identityOAuthClient.getTokens(redirectUri, code);
+                Map<String, Object> identity = null;
+                String idToken = (String) tokens.get("id_token");
+                if (!Strings.isBlank(code)) {
+                    identity = identityTokenService.parse(idToken);
+                }
+                String accessToken = (String) tokens.get("access_token");
+                if (!Strings.isBlank(accessToken)) {
+                    identity = identityOAuthClient.getUserInfo(accessToken);
+                }
+                if (identity != null) {
+                    Map<String, Object> session = sessionService.create(identity, state, req, res);
+                    String sessionToken = sessionTokenService.create(session);
+                    setCookie(res, sessionName, sessionToken, secure, (int) sessionDuration.get(ChronoUnit.SECONDS));
+                    redirect(res, HttpStatus.TEMPORARY_REDIRECT, buildPublicUri(req, "/"));
+                    return;
+                }
             }
 
             String sessionToken = getCookie(req, sessionName);

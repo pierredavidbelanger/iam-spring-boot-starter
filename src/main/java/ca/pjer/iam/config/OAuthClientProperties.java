@@ -8,5 +8,6 @@ public class OAuthClientProperties {
     private String clientSecret;
     private String authorizeUri;
     private String tokenUri;
+    private String userInfoUri;
     private String logoutUri;
 }
