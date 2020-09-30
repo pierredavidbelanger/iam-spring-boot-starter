@@ -34,7 +34,7 @@ public class DefaultOAuthClient implements OAuthClient {
     public URI getLogoutUri(URI redirectUri) {
         return UriComponentsBuilder.fromUriString(properties.getLogoutUri())
                 .queryParam("client_id", properties.getClientId())
-                .queryParam("logout_uri", redirectUri.toString())
+                .queryParam(properties.getLogoutRedirectParam(), redirectUri.toString())
                 .build().toUri();
     }
 
