@@ -89,7 +89,7 @@ public class AuthFilter extends HttpFilter {
                     identity = identityTokenService.parse(idToken);
                 }
                 String accessToken = (String) tokens.get("access_token");
-                if (!Strings.isBlank(accessToken)) {
+                if (identity == null && !Strings.isBlank(accessToken)) {
                     identity = identityOAuthClient.getUserInfo(accessToken);
                 }
                 if (identity != null) {
@@ -152,7 +152,7 @@ public class AuthFilter extends HttpFilter {
 
         } catch (Exception e) {
 
-            log.info("Exception in auth: {}", e.toString());
+            log.warn("Exception in auth:", e);
             res.setStatus(HttpStatus.UNAUTHORIZED.value());
             return;
         }
