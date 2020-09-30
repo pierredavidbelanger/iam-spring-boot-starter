@@ -88,15 +88,18 @@ public class JoseTokenService implements TokenService {
 
     @Override
     public Map<String, Object> parse(String token) {
-        if (keyResolver == null) {
-            throw new UnsupportedOperationException("Cannot parse token");
+        JwtConsumerBuilder builder = new JwtConsumerBuilder();
+        builder.setRequireSubject();
+        if (!Strings.isBlank(issuer)) {
+            builder.setExpectedIssuer(issuer);
         }
-        JwtConsumer jwtConsumer = new JwtConsumerBuilder()
-                .setRequireSubject()
-                .setExpectedIssuer(issuer)
-                .setExpectedAudience(audience)
-                .setVerificationKeyResolver(keyResolver)
-                .build();
+        if (!Strings.isBlank(audience)) {
+            builder.setExpectedAudience(audience);
+        }
+        if (keyResolver != null) {
+            builder.setVerificationKeyResolver(keyResolver);
+        }
+        JwtConsumer jwtConsumer = builder.build();
         JwtClaims jwt;
         try {
             jwt = jwtConsumer.processToClaims(token);
