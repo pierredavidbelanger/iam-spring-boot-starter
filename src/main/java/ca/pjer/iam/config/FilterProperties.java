@@ -9,6 +9,7 @@ import java.util.List;
 @Data
 public class FilterProperties {
     private boolean secure = true;
+    private boolean autoLoginRedirect = false;
     private String loginPath = "/auth/login";
     private String loginCallbackPath = "/auth/login/callback";
     private String logoutPath = "/auth/logout";

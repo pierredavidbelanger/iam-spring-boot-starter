@@ -25,6 +25,7 @@ import java.util.stream.Stream;
 public class AuthFilter extends HttpFilter {
 
     private final boolean secure;
+    private final boolean autoLoginRedirect;
     private final String loginPath;
     private final String loginCallbackPath;
     private final String logoutPath;
@@ -42,6 +43,7 @@ public class AuthFilter extends HttpFilter {
         secure = filterProperties.isSecure();
         loginPath = filterProperties.getLoginPath();
         loginCallbackPath = filterProperties.getLoginCallbackPath();
+        autoLoginRedirect = filterProperties.isAutoLoginRedirect();
         logoutPath = filterProperties.getLogoutPath();
         logoutCallbackPath = filterProperties.getLogoutCallbackPath();
         sessionName = filterProperties.getSessionName();
@@ -87,7 +89,7 @@ public class AuthFilter extends HttpFilter {
                     identity = identityTokenService.parse(idToken);
                 }
                 String accessToken = (String) tokens.get("access_token");
-                if (!Strings.isBlank(accessToken)) {
+                if (identity == null && !Strings.isBlank(accessToken)) {
                     identity = identityOAuthClient.getUserInfo(accessToken);
                 }
                 if (identity != null) {
@@ -115,7 +117,10 @@ public class AuthFilter extends HttpFilter {
                 sessionToken = req.getParameter(sessionName);
             }
             if (Strings.isBlank(sessionToken)) {
-                res.setStatus(HttpStatus.UNAUTHORIZED.value());
+                if (autoLoginRedirect)
+                    redirect(res, HttpStatus.TEMPORARY_REDIRECT, buildPublicUri(req, loginPath));
+                else
+                    res.setStatus(HttpStatus.UNAUTHORIZED.value());
                 return;
             }
 
@@ -147,7 +152,7 @@ public class AuthFilter extends HttpFilter {
 
         } catch (Exception e) {
 
-            log.info("Exception in auth: {}", e.toString());
+            log.warn("Exception in auth:", e);
             res.setStatus(HttpStatus.UNAUTHORIZED.value());
             return;
         }
