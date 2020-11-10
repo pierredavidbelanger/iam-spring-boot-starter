@@ -15,6 +15,7 @@ import org.jose4j.keys.resolvers.JwksVerificationKeyResolver;
 import org.jose4j.keys.resolvers.VerificationKeyResolver;
 import org.jose4j.lang.JoseException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -23,13 +24,24 @@ import java.util.stream.Collectors;
 public class JoseTokenService implements TokenService {
 
     private final String issuer;
-    private final String audience;
+    private final List<String> audience;
     private final Supplier<JsonWebKey> keySupplier;
     private final VerificationKeyResolver keyResolver;
 
     public JoseTokenService(TokenServiceProperties properties) {
         this.issuer = properties.getIssuer();
-        this.audience = properties.getAudience();
+        String aud = properties.getAudience();
+        if (Strings.isNotBlank(aud)) {
+            String[] auds = aud.split(",");
+            this.audience = new ArrayList<>(auds.length);
+            for (String a : auds) {
+                if (Strings.isNotBlank(a))
+                    this.audience.add(a.trim());
+            }
+        } else {
+            audience = null;
+        }
+
         if (!properties.getJwks().isEmpty()) {
             List<JsonWebKey> jsonWebKeys = properties.getJwks().stream()
                     .map(this::createJsonWebKeyFromParams).collect(Collectors.toList());
@@ -93,8 +105,8 @@ public class JoseTokenService implements TokenService {
         if (!Strings.isBlank(issuer)) {
             builder.setExpectedIssuer(issuer);
         }
-        if (!Strings.isBlank(audience)) {
-            builder.setExpectedAudience(audience);
+        if (audience != null && audience.size() > 0) {
+            builder.setExpectedAudience(audience.toArray(new String[]{}));
         }
         if (keyResolver != null) {
             builder.setVerificationKeyResolver(keyResolver);
